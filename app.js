@@ -8,21 +8,20 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: '*', // Replace with your frontend URL in production
+  origin: process.env.FRONTEND_URL, 
 }));
 
 app.use(express.json());
 
-// Create a temporary directory for code files
+
 const tempDir = path.join(__dirname, 'temp');
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
 
-// Map programming languages to their respective commands
 const languageMap = {
   python: 'python',
-  cpp: 'g++', // Change to g++ for C++
+  cpp: 'g++', 
   c: 'gcc',
   java: 'javac',
   javascript: 'node'
@@ -32,12 +31,10 @@ app.post('/compile', (req, res) => {
   const { language, code, input } = req.body;
   const lang = languageMap[language];
 
-  // Validate language
   if (!lang) {
     return res.status(400).json({ error: 'Unsupported language' });
   }
 
-  // Generate a temporary file name and path
   let fileName;
   let compileCommand;
   let executeCommand;
@@ -45,7 +42,7 @@ app.post('/compile', (req, res) => {
   switch (language) {
     case 'python':
       fileName = 'temp.py';
-      compileCommand = null; // Python doesn't need compilation
+      compileCommand = null; 
       executeCommand = `python "${path.join(tempDir, fileName)}"`;
       break;
     case 'cpp':
@@ -59,23 +56,23 @@ app.post('/compile', (req, res) => {
       executeCommand = `"${path.join(tempDir, 'a.out')}"`;
       break;
     case 'java':
-      fileName = 'Main.java'; // Ensure the file name is Main.java if using class Main
+      fileName = 'Main.java';
       compileCommand = `javac "${path.join(tempDir, fileName)}"`;
-      executeCommand = `java -cp "${tempDir}" Main`; // Execute the Main class
+      executeCommand = `java -cp "${tempDir}" Main`; 
       break;
     case 'javascript':
       fileName = 'temp.js';
-      compileCommand = null; // JavaScript doesn't need compilation
+      compileCommand = null; 
       executeCommand = `node "${path.join(tempDir, fileName)}"`;
       break;
     default:
       return res.status(400).json({ error: 'Unsupported language' });
   }
 
-  // Write the code to the temporary file
+
   fs.writeFileSync(path.join(tempDir, fileName), code);
 
-  // Compile and/or execute the command
+
   const command = compileCommand ? `${compileCommand} && ${executeCommand}` : executeCommand;
 
   exec(command, (error, stdout, stderr) => {
@@ -93,7 +90,7 @@ app.post('/compile', (req, res) => {
   });
 });
 
-// Get port from environment variable or default to 5000
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
